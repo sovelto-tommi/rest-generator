@@ -1,65 +1,23 @@
-[![Express Logo](https://i.cloudup.com/zfY6lL7eFa-3000x3000.png)](http://expressjs.com/)
+# Express REST generator
 
 [Express'](https://www.npmjs.com/package/express) application generator.
 
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-[![Linux Build][travis-image]][travis-url]
-[![Windows Build][appveyor-image]][appveyor-url]
+[Express original repo](https://github.com/expressjs/generator). (Sorry not forked, just cloned - at least now)
 
-## Installation
+## Reasons
 
-```sh
-$ npm install -g express-generator
-```
+I got tired of modifying 
 
-## Quick Start
+## Changes
 
-The quickest way to get started with express is to utilize the executable `express(1)` to generate an application as shown below:
+Changes to the original Express-generator:
 
-Create the app:
-
-```bash
-$ express --view=hbs /tmp/foo && cd /tmp/foo
-```
-
-Install dependencies:
-
-```bash
-$ npm install
-```
-
-Start your Express.js app at `http://localhost:3000/`:
-
-```bash
-$ npm start
-```
-
-## Command Line Options
-
-This generator can also be further configured with the following command line flags.
-
-        --version        output the version number
-    -e, --ejs            add ejs engine support
-        --pug            add pug engine support
-        --hbs            add handlebars engine support
-    -H, --hogan          add hogan.js engine support
-    -v, --view <engine>  add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)
-        --no-view        use static html instead of view engine
-    -c, --css <engine>   add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)
-        --git            add .gitignore
-    -f, --force          force on non-empty directory
-    -h, --help           output usage information
-
-## License
-
-[MIT](LICENSE)
-
-[npm-image]: https://img.shields.io/npm/v/express-generator.svg
-[npm-url]: https://npmjs.org/package/express-generator
-[travis-image]: https://img.shields.io/travis/expressjs/generator/master.svg?label=linux
-[travis-url]: https://travis-ci.org/expressjs/generator
-[appveyor-image]: https://img.shields.io/appveyor/ci/dougwilson/generator/master.svg?label=windows
-[appveyor-url]: https://ci.appveyor.com/project/dougwilson/generator
-[downloads-image]: https://img.shields.io/npm/dm/express-generator.svg
-[downloads-url]: https://npmjs.org/package/express-generator
+- No view engine by default (original's `--no-view` option)
+- .gitignore added by default (original's `--git` option)
+- Added [nodemon](https://www.npmjs.com/package/nodemon) to the project
+    - dependency to version ^2.0.2
+    - `npm start` will now use nodemon to launch
+- Added a dependency to [Jest](https://www.npmjs.com/package/jest),
+and [supertest](https://www.npmjs.com/package/supertest) (I know.. should have a possibility to choose which frameworks)
+- Added a simple *supertest* to `router/__test__/users.test.js`
+- users router now responds to `/api/users` with a simple JSON object instead of a String (this tested in the test)

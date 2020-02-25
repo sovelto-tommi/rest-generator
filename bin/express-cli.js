@@ -48,14 +48,16 @@ program
   .name('express')
   .version(VERSION, '    --version')
   .usage('[options] [dir]')
+//  .option('--no-view', 'use static html instead of view engine')
   .option('-e, --ejs', 'add ejs engine support', renamedOption('--ejs', '--view=ejs'))
   .option('    --pug', 'add pug engine support', renamedOption('--pug', '--view=pug'))
+  .option('    --jade', 'add jade engine support', renamedOption('--jade', '--view=jade'))
   .option('    --hbs', 'add handlebars engine support', renamedOption('--hbs', '--view=hbs'))
   .option('-H, --hogan', 'add hogan.js engine support', renamedOption('--hogan', '--view=hogan'))
-  .option('-v, --view <engine>', 'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)')
-  .option('    --no-view', 'use static html instead of view engine')
+  .option('-v, --view [engine]', 'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to pug)', false)
   .option('-c, --css <engine>', 'add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)')
-  .option('    --git', 'add .gitignore')
+  .option('--git', 'add .gitignore (default)')
+  .option('--no-git', 'do not add .gitignore')
   .option('-f, --force', 'force on non-empty directory')
   .parse(process.argv)
 
@@ -135,18 +137,26 @@ function copyTemplateMulti (fromDir, toDir, nameGlob) {
 
 function createApplication (name, dir) {
   console.log()
-
   // Package
   var pkg = {
     name: name,
     version: '0.0.0',
     private: true,
+    repository: '',
+    author: '',
+    license: '',
     scripts: {
-      start: 'node ./bin/www'
+      start: 'nodemon ./bin/www',
+      test: 'jest'
     },
     dependencies: {
       'debug': '~2.6.9',
-      'express': '~4.16.1'
+      'express': '~4.16.1',
+      'nodemon': '^2.0.2'
+    },
+    devDependencies: {
+      jest: '^25.1.0',
+      supertest: '^4.0.2'
     }
   }
 
@@ -172,11 +182,12 @@ function createApplication (name, dir) {
   app.locals.uses.push('express.json()')
   app.locals.uses.push('express.urlencoded({ extended: false })')
 
+  if (program.view) {
   // Cookie parser
-  app.locals.modules.cookieParser = 'cookie-parser'
-  app.locals.uses.push('cookieParser()')
-  pkg.dependencies['cookie-parser'] = '~1.4.4'
-
+    app.locals.modules.cookieParser = 'cookie-parser'
+    app.locals.uses.push('cookieParser()')
+    pkg.dependencies['cookie-parser'] = '~1.4.4'
+  }
   if (dir !== '.') {
     mkdir(dir, '.')
   }
@@ -207,7 +218,10 @@ function createApplication (name, dir) {
 
   // copy route templates
   mkdir(dir, 'routes')
+  mkdir(dir, 'routes/__test__')
   copyTemplateMulti('js/routes', dir + '/routes', '*.js')
+  // copy route tests
+  copyTemplateMulti('js/routes/__test__', dir + '/routes/__test__', '*.test.js')
 
   if (program.view) {
     // Copy view templates
@@ -269,12 +283,13 @@ function createApplication (name, dir) {
   }
 
   // Index router mount
-  app.locals.localModules.indexRouter = './routes/index'
-  app.locals.mounts.push({ path: '/', code: 'indexRouter' })
-
+  if (program.view) {
+    app.locals.localModules.indexRouter = './routes/index'
+    app.locals.mounts.push({ path: '/', code: 'indexRouter' })
+  }
   // User router mount
   app.locals.localModules.usersRouter = './routes/users'
-  app.locals.mounts.push({ path: '/users', code: 'usersRouter' })
+  app.locals.mounts.push({ path: '/api/users', code: 'usersRouter' })
 
   // Template support
   switch (program.view) {
@@ -451,19 +466,15 @@ function main () {
   // App name
   var appName = createAppName(path.resolve(destinationPath)) || 'hello-world'
 
+  console.log('Main program', program)
+
   // View engine
   if (program.view === true) {
     if (program.ejs) program.view = 'ejs'
     if (program.hbs) program.view = 'hbs'
     if (program.hogan) program.view = 'hjs'
+    if (program.jade) program.view = 'jade'
     if (program.pug) program.view = 'pug'
-  }
-
-  // Default view engine
-  if (program.view === true) {
-    warning('the default view engine will not be jade in future releases\n' +
-      "use `--view=jade' or `--help' for additional options")
-    program.view = 'jade'
   }
 
   // Generate application
